@@ -1,0 +1,8 @@
+[package]
+name = "ccore"
+version = "0.1.0"
+edition = "2024"
+description = "Compiler for CCore, a systems language with Rust-like syntax and C's memory model"
+license = "MIT OR Apache-2.0"
+
+[dependencies]

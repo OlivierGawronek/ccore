@@ -1,0 +1,15 @@
+fn add(a: i32, b: i32) -> i32 {
+    return a + b;
+}
+
+fn main() -> i32 {
+    let mut x: i32 = 0;
+    while x < 10 {
+        x = add(x, 1);
+    }
+    if x == 10 {
+        return 0;
+    } else {
+        return 1;
+    }
+}
