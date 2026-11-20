@@ -198,6 +198,11 @@ impl<'a> Lexer<'a> {
             (b'>', Some(b'=')) => (TokenKind::GtEq, 2),
             (b'&', Some(b'&')) => (TokenKind::AndAnd, 2),
             (b'|', Some(b'|')) => (TokenKind::OrOr, 2),
+            (b'+', Some(b'=')) => (TokenKind::PlusEq, 2),
+            (b'-', Some(b'=')) => (TokenKind::MinusEq, 2),
+            (b'*', Some(b'=')) => (TokenKind::StarEq, 2),
+            (b'/', Some(b'=')) => (TokenKind::SlashEq, 2),
+            (b'%', Some(b'=')) => (TokenKind::PercentEq, 2),
             (b'(', _) => (TokenKind::LParen, 1),
             (b')', _) => (TokenKind::RParen, 1),
             (b'{', _) => (TokenKind::LBrace, 1),
@@ -268,6 +273,16 @@ mod tests {
             kinds("-> == != <= >= && || = ! < > -"),
             vec![
                 Arrow, EqEq, BangEq, LtEq, GtEq, AndAnd, OrOr, Eq, Bang, Lt, Gt, Minus, Eof
+            ]
+        );
+    }
+
+    #[test]
+    fn compound_assignment_operators() {
+        assert_eq!(
+            kinds("+= -= *= /= %= -> + ="),
+            vec![
+                PlusEq, MinusEq, StarEq, SlashEq, PercentEq, Arrow, Plus, Eq, Eof
             ]
         );
     }

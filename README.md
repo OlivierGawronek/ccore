@@ -21,7 +21,7 @@ fn is_prime(n: i32) -> bool {
         if n % d == 0 {
             return false;
         }
-        d = d + 1;
+        d += 1;
     }
     return true;
 }
@@ -34,9 +34,9 @@ fn main() {
     while found < 10 {
         if is_prime(n) {
             println(n);
-            found = found + 1;
+            found += 1;
         }
-        n = n + 1;
+        n += 1;
     }
 }
 ```
@@ -81,6 +81,7 @@ See [docs/language.md](docs/language.md) for everything that works today. In sho
 
 - types: `i32`, `i64`, `bool`
 - `let` and `let mut`, shadowing, type inference for locals
+- compound assignment: `+=`, `-=`, `*=`, `/=`, `%=`
 - `if` / `else if` / `else`, `while`, blocks
 - functions, recursion, calls in any order
 - `println` for strings, integers and bools
@@ -105,7 +106,7 @@ Arithmetic in the generated C goes through small checked helpers, because signed
 -  generics and interfaces
 -  lightweight ownership model and `unsafe` blocks (no full borrow checker)
 
-Smaller things that are coming sooner: `+=` and friends, `/* */` comments, `mut` parameters, `const`.
+Smaller things that are coming sooner: `/* */` comments, `mut` parameters, `const`.
 
 This project is developed in my free time. Reaching this point has taken 9 months, so I am not providing any specific release dates or deadlines for upcoming features. Updates will be released gradually as development progresses.
 

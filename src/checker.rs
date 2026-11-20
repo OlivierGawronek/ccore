@@ -552,6 +552,7 @@ mod tests {
             "cannot assign twice to immutable variable `x`; declare it with `let mut`"
         );
         assert!(error_of("fn f(a: i32) { a = 2; } fn main() {}").contains("parameter `a`"));
+        assert!(error_of("fn main() { let x = 1; x += 1; }").contains("immutable variable `x`"));
     }
 
     #[test]

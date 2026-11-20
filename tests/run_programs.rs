@@ -92,6 +92,27 @@ fn shadowing_and_scopes() {
 }
 
 #[test]
+fn compound_assignment() {
+    require_cc!();
+    let out = run_source(
+        "compound",
+        "fn main() {
+            let mut x = 10;
+            x += 5;
+            x -= 3;
+            x *= 4;
+            x /= 6;
+            x %= 5;
+            println(x);
+            let mut big: i64 = 1;
+            big *= 3_000_000_000;
+            println(big);
+        }",
+    );
+    assert_eq!(stdout(&out), "3\n3000000000\n");
+}
+
+#[test]
 fn integer_overflow_panics() {
     require_cc!();
     let out = run_source(
