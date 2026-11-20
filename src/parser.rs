@@ -167,11 +167,28 @@ impl Parser {
                 StmtKind::Return(value)
             }
             TokenKind::LBrace => StmtKind::Block(self.parse_block()?),
-            TokenKind::Ident(_) if *self.peek_nth_kind(1) == TokenKind::Eq => {
+            TokenKind::Ident(_) if assign_op(self.peek_nth_kind(1)).is_some() => {
                 let (name, name_span) = self.expect_ident()?;
-                self.expect(TokenKind::Eq)?;
-                let value = self.parse_expr()?;
+                let op = assign_op(&self.advance().kind).unwrap();
+                let mut value = self.parse_expr()?;
                 self.expect(TokenKind::Semicolon)?;
+
+                // `x += e` is just `x = x + e`; nothing after the parser needs to know.
+                if let Some(op) = op {
+                    let span = Span {
+                        start: name_span.start,
+                        end: value.span.end,
+                    };
+                    let target = Expr::new(ExprKind::Var(name.clone()), name_span);
+                    value = Expr::new(
+                        ExprKind::Binary {
+                            op,
+                            lhs: Box::new(target),
+                            rhs: Box::new(value),
+                        },
+                        span,
+                    );
+                }
                 StmtKind::Assign {
                     name,
                     name_span,
@@ -358,6 +375,20 @@ impl Parser {
     }
 }
 
+/// `Some(None)` for plain `=`, `Some(Some(op))` for `op=`.
+fn assign_op(kind: &TokenKind) -> Option<Option<BinaryOp>> {
+    let op = match kind {
+        TokenKind::Eq => None,
+        TokenKind::PlusEq => Some(BinaryOp::Add),
+        TokenKind::MinusEq => Some(BinaryOp::Sub),
+        TokenKind::StarEq => Some(BinaryOp::Mul),
+        TokenKind::SlashEq => Some(BinaryOp::Div),
+        TokenKind::PercentEq => Some(BinaryOp::Rem),
+        _ => return None,
+    };
+    Some(op)
+}
+
 fn binary_op(kind: &TokenKind) -> Option<(BinaryOp, u8)> {
     let op = match kind {
         TokenKind::OrOr => (BinaryOp::Or, 1),
@@ -472,6 +503,16 @@ mod tests {
             .map(|p| p.name.as_str())
             .collect();
         assert_eq!(names, ["a", "b"]);
+    }
+
+    #[test]
+    fn compound_assignment_desugars() {
+        let program = parse_src("fn main() { x *= y + 1; }").unwrap();
+        let StmtKind::Assign { name, value, .. } = &program.functions[0].body.stmts[0].kind else {
+            panic!("expected assignment");
+        };
+        assert_eq!(name, "x");
+        assert_eq!(sexpr(value), "(x * (y + 1))");
     }
 
     #[test]

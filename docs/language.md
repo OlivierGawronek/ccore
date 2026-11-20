@@ -118,7 +118,15 @@ Comparisons can't be chained, so `a < b < c` is an error instead of meaning some
 error: comparison operators cannot be chained; use parentheses
 ```
 
-There's no `+=`, `++` or `--` yet. Write `x = x + 1`.
+Compound assignment works with all arithmetic operators. It's shorthand for the long form and goes through the same checks (mutability, types, overflow):
+
+```rust
+let mut x = 10;
+x += 5;     // x = x + 5
+x *= 2;     // x = x * 2
+```
+
+There's no `++` or `--`. Write `x += 1`.
 
 ## Control flow
 
