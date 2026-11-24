@@ -22,12 +22,17 @@ fn main() -> i32 {
 
 ## Comments
 
-Line comments only:
-
 ```rust
-// this is a comment
+// line comment
 let x = 1; // so is this
+
+/* block comment,
+   can span lines */
+
+/* block comments /* nest */ like in Rust */
 ```
+
+Because they nest, you can comment out a piece of code that already has a block comment inside it.
 
 ## Types
 

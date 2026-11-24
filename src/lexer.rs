@@ -37,7 +37,7 @@ impl<'a> Lexer<'a> {
         self.bytes.get(self.pos + 1).copied()
     }
 
-    fn skip_whitespace_and_comments(&mut self) {
+    fn skip_whitespace_and_comments(&mut self) -> Result<(), Diagnostic> {
         loop {
             match self.peek() {
                 Some(c) if c.is_ascii_whitespace() => self.pos += 1,
@@ -46,13 +46,45 @@ impl<'a> Lexer<'a> {
                         self.pos += 1;
                     }
                 }
-                _ => return,
+                Some(b'/') if self.peek_next() == Some(b'*') => self.skip_block_comment()?,
+                _ => return Ok(()),
             }
         }
     }
 
+    /// Block comments nest like in Rust, so commenting out code that already
+    /// contains a `/* */` works.
+    fn skip_block_comment(&mut self) -> Result<(), Diagnostic> {
+        let start = self.pos;
+        self.pos += 2;
+        let mut depth = 1;
+        while depth > 0 {
+            match (self.peek(), self.peek_next()) {
+                (Some(b'/'), Some(b'*')) => {
+                    depth += 1;
+                    self.pos += 2;
+                }
+                (Some(b'*'), Some(b'/')) => {
+                    depth -= 1;
+                    self.pos += 2;
+                }
+                (Some(_), _) => self.pos += 1,
+                (None, _) => {
+                    return Err(Diagnostic::new(
+                        "unterminated block comment",
+                        Span {
+                            start,
+                            end: start + 2,
+                        },
+                    ));
+                }
+            }
+        }
+        Ok(())
+    }
+
     fn next_token(&mut self) -> Result<Token, Diagnostic> {
-        self.skip_whitespace_and_comments();
+        self.skip_whitespace_and_comments()?;
         let start = self.pos;
 
         let Some(c) = self.peek() else {
@@ -318,6 +350,33 @@ mod tests {
     fn comments_are_skipped() {
         assert_eq!(kinds("1 // a comment\n2"), vec![Int(1), Int(2), Eof]);
         assert_eq!(kinds("// just a comment"), vec![Eof]);
+    }
+
+    #[test]
+    fn block_comments() {
+        assert_eq!(kinds("1 /* skip */ 2"), vec![Int(1), Int(2), Eof]);
+        assert_eq!(kinds("1 /* a\n b\n c */ 2"), vec![Int(1), Int(2), Eof]);
+        assert_eq!(
+            kinds("1 /* outer /* inner */ still outer */ 2"),
+            vec![Int(1), Int(2), Eof]
+        );
+        assert_eq!(
+            kinds("a/**/b"),
+            vec![Ident("a".into()), Ident("b".into()), Eof]
+        );
+        assert_eq!(
+            kinds("x /= 2"),
+            vec![Ident("x".into()), SlashEq, Int(2), Eof]
+        );
+    }
+
+    #[test]
+    fn unterminated_block_comment_is_an_error() {
+        let err = Lexer::new("let x = 1; /* oops /* */")
+            .tokenize()
+            .unwrap_err();
+        assert_eq!(err.message, "unterminated block comment");
+        assert_eq!(err.span, Span { start: 11, end: 13 });
     }
 
     #[test]

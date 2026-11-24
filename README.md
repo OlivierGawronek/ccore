@@ -106,7 +106,7 @@ Arithmetic in the generated C goes through small checked helpers, because signed
 -  generics and interfaces
 -  lightweight ownership model and `unsafe` blocks (no full borrow checker)
 
-Smaller things that are coming sooner: `/* */` comments, `mut` parameters, `const`.
+Smaller things that are coming sooner: `mut` parameters, `const`.
 
 This project is developed in my free time. Reaching this point has taken 9 months, so I am not providing any specific release dates or deadlines for upcoming features. Updates will be released gradually as development progresses.
 
